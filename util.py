@@ -30,17 +30,17 @@ def read_tree (bitreader):
     }
 
     b1 = bitreader.readbit()
-    if str(b1) == '1':
+    if b1 == 1:
         left = read_tree(bitreader)
         right = read_tree(bitreader)
-        tree = tree_dict[str(b1)](left, right)
+        tree = tree_dict['1'](left, right)
     else:
         b2 = bitreader.readbit()
-        b = str(b1) + str(b2)
-        if b == '00':
-            tree = tree_dict[b]
-        elif b == '01':
-            tree = tree_dict[b](bitreader.readbits(8))
+        b = b1 + b2
+        if b == 0:
+            tree = tree_dict['00']
+        elif b == 1:
+            tree = tree_dict['01'](bitreader.readbits(8))
     # print(tree)
     return tree
 
@@ -63,20 +63,7 @@ def decompress (compressed, uncompressed):
         if val == None:
             break
         else:
-            uncompressed.write(bytes(val))
-            print(val)
-    # todolist = []
-    # todolist.append(tree)
-    # while todolist:
-    #     t = todolist.pop()
-    #     if isinstance(t, huffman.TreeLeafEndMessage):
-    #         break
-    #     elif isinstance(t, huffman.TreeLeaf):
-    #         uncompressed.write(bytes(t.value))
-    #         print(t.value)
-    #     elif isinstance(t, huffman.TreeBranch):
-    #         todolist.append(t.right)
-    #         todolist.append(t.left)
+            uncompressed.write(bytes([val]))
 
 def write_tree (tree, bitwriter):
     '''Write the specified Huffman tree to the given bit writer.  The
