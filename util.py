@@ -23,8 +23,26 @@ def read_tree (bitreader):
     Returns:
       A Huffman tree constructed according to the given description.
     '''
-    pass
+    tree_dict = {
+        '00' : huffman.TreeLeafEndMessage(),
+        '01' : lambda i: huffman.TreeLeaf(i),
+        '1'  : lambda l, r: huffman.TreeBranch(l, r)
+    }
 
+    b1 = bitreader.readbit()
+    if str(b1) == '1':
+        left = read_tree(bitreader)
+        right = read_tree(bitreader)
+        tree = tree_dict[str(b1)](left, right)
+    else:
+        b2 = bitreader.readbit()
+        b = str(b1) + str(b2)
+        if b == '00':
+            tree = tree_dict[b]
+        elif b == '01':
+            tree = tree_dict[b](bitreader.readbits(8))
+    # print(tree)
+    return tree
 
 def decompress (compressed, uncompressed):
     '''First, read a Huffman tree from the 'compressed' stream using your
@@ -38,8 +56,27 @@ def decompress (compressed, uncompressed):
           output is written.
 
     '''
-    pass
-
+    bitstream = bitio.BitReader(compressed)
+    tree = read_tree(bitstream)
+    while True:
+        val = huffman.decode(tree, bitstream)
+        if val == None:
+            break
+        else:
+            uncompressed.write(bytes(val))
+            print(val)
+    # todolist = []
+    # todolist.append(tree)
+    # while todolist:
+    #     t = todolist.pop()
+    #     if isinstance(t, huffman.TreeLeafEndMessage):
+    #         break
+    #     elif isinstance(t, huffman.TreeLeaf):
+    #         uncompressed.write(bytes(t.value))
+    #         print(t.value)
+    #     elif isinstance(t, huffman.TreeBranch):
+    #         todolist.append(t.right)
+    #         todolist.append(t.left)
 
 def write_tree (tree, bitwriter):
     '''Write the specified Huffman tree to the given bit writer.  The
