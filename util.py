@@ -23,25 +23,26 @@ def read_tree (bitreader):
     Returns:
       A Huffman tree constructed according to the given description.
     '''
+
+    #dictionary mapping the bit sequence to the tree instance
     tree_dict = {
         '00' : huffman.TreeLeafEndMessage(),
         '01' : lambda i: huffman.TreeLeaf(i),
         '1'  : lambda l, r: huffman.TreeBranch(l, r)
     }
-
+    # check first bit
     b1 = bitreader.readbit()
-    if b1 == 1:
-        left = read_tree(bitreader)
-        right = read_tree(bitreader)
-        tree = tree_dict['1'](left, right)
-    else:
+    if b1 == 1: # if first bit is 1, then it must be a branch
+        left = read_tree(bitreader) # apply this function again to each branch
+        right = read_tree(bitreader) # recursively because it is not a leaf
+        tree = tree_dict['1'](left, right) # (ie. not end of tree)
+    else: # else its either a endLeaf or valueLeaf
         b2 = bitreader.readbit()
         b = b1 + b2
         if b == 0:
             tree = tree_dict['00']
         elif b == 1:
             tree = tree_dict['01'](bitreader.readbits(8))
-    # print(tree)
     return tree
 
 def decompress (compressed, uncompressed):
@@ -56,14 +57,14 @@ def decompress (compressed, uncompressed):
           output is written.
 
     '''
-    bitstream = bitio.BitReader(compressed)
-    tree = read_tree(bitstream)
-    while True:
+    bitstream = bitio.BitReader(compressed) # gets bits from compressed
+    tree = read_tree(bitstream) # produce tree based on bit sequence
+    while True: # do final decoding of tree based on remaining bits
         val = huffman.decode(tree, bitstream)
-        if val == None:
+        if val == None: # stop at Special End Leaf
             break
-        else:
-            uncompressed.write(bytes([val]))
+        else: # write the stored values in the tree (ordered by bit sequence)
+            uncompressed.write(bytes([val])) # as a byte in uncompressed
 
 def write_tree (tree, bitwriter):
     '''Write the specified Huffman tree to the given bit writer.  The
