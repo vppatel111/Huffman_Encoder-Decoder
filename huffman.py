@@ -7,17 +7,17 @@ class TreeLeafEndMessage:
 
 
 class TreeLeaf:
-    def __init__ (self, value):
+    def __init__(self, value):
         self.value = value
 
 
 class TreeBranch:
-    def __init__ (self, left, right):
+    def __init__(self, left, right):
         self.left = left
         self.right = right
 
 
-def make_tree (freq_table):
+def make_tree(freq_table):
 
     trees = MinHeap()
     trees.add(1, TreeLeafEndMessage())
@@ -33,7 +33,7 @@ def make_tree (freq_table):
     return tree
 
 
-def decode (tree, bitreader):
+def decode(tree, bitreader):
     while True:
         if isinstance(tree, TreeLeafEndMessage):
             return None
@@ -48,7 +48,7 @@ def decode (tree, bitreader):
             raise TypeError('{} is not a tree type'.format(type(tree)))
 
 
-def make_encoding_table (huffman_tree):
+def make_encoding_table(huffman_tree):
     table = {}
 
     def recurse (tree, path):
