@@ -1,0 +1,20 @@
+Huffman Encoder and Decoder
+by: Vishal Patel & Rizwan Qureshi - EB2
+
+Description: This program compresses and decompresses files using Huffman
+codes. The compress feature is separated as a command line utility where
+a user can use the $python3 ../compress.py (filename).(extension) command in
+the wwwroot directory to compress a file into a .huf extension. The decompress
+feature is used by the web server when run using $python3 ../webserver.py and
+the address http://localhost:8000/(filename).(extension) in a browser to
+display the file.
+
+To use compress: 1. Ensure the file to be compressed is in the wwwroot
+directory.
+2. Use the $python3 ../compress.py (filename).(extension) command
+
+To view file: 1. Start server using the $python3 ../webserver.py command.
+2. Go to the address http://localhost:8000/(filename).(extension) in a browser.
+3. The file should display within the web browser.
+
+Additional Info: The functions in the util.py file was completed.
