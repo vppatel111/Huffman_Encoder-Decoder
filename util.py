@@ -1,5 +1,27 @@
 # The functions in this file are to be implemented by students.
+"""
+Huffman Encoder and Decoder
+by: Vishal Patel & Rizwan Qureshi - EB2
 
+Description: This program compresses and decompresses files using Huffman
+codes. The compress feature is separated as a command line utility where
+a user can use the $python3 ../compress.py (filename).(extension) command in
+the wwwroot directory to compress a file into a .huf extension. The decompress
+feature is used by the web server when run using $python3 ../webserver.py and
+the address http://localhost:8000/(filename).(extension) in a browser to
+display the file.
+
+To use compress: 1. Ensure the file to be compressed is in the wwwroot
+directory.
+2. Use the $python3 ../compress.py (filename).(extension) command
+
+To view file: 1. Start server using the $python3 ../webserver.py command.
+2. Go to the address http://localhost:8000/(filename).(extension) in a browser.
+3. The file should display within the web browser.
+
+Additional Info: The functions in the util.py file was completed.
+- Included pictures: huffman.bmp, cat.jpg
+"""
 import bitio
 import huffman
 
@@ -23,18 +45,18 @@ def read_tree(bitreader):
     Returns:
       A Huffman tree constructed according to the given description.
     '''
-    tree_dict = {
+    tree_dict = {  # maps the bit sequence to the tree instance
         '00': huffman.TreeLeafEndMessage(),
         '01': lambda i: huffman.TreeLeaf(i),
         '1': lambda l, r: huffman.TreeBranch(l, r)
     }
 
-    b1 = bitreader.readbit()
-    if b1 == 1:
-        left = read_tree(bitreader)
-        right = read_tree(bitreader)
+    b1 = bitreader.readbit()  # read first bit
+    if b1 == 1:  # if first bit is a 1 it must be a branch
+        left = read_tree(bitreader)  # apply recursively over left and right
+        right = read_tree(bitreader) # branch
         tree = tree_dict['1'](left, right)
-    else:
+    else:  # otherwise its either a endLeaf or valueLeaf
         b2 = bitreader.readbit()
         b = b1 + b2
         if b == 0:
@@ -57,14 +79,14 @@ def decompress(compressed, uncompressed):
           output is written.
 
     '''
-    bitstream = bitio.BitReader(compressed)
-    tree = read_tree(bitstream)
-    while True:
+    bitstream = bitio.BitReader(compressed)  # Gets bits from compressed
+    tree = read_tree(bitstream)  # Produce tree based on bit sequence
+    while True:  # Do final decoding of tree based on remaining bits
         val = huffman.decode(tree, bitstream)
-        if val is None:  # Changed to is, for code readibility
+        if val is None:  # Stop at endLead
             break
-        else:
-            uncompressed.write(bytes([val]))
+        else:  # Write the stored values in the tree (ordered by bit sequence)
+            uncompressed.write(bytes([val]))  # as a byte in uncompressed
 
 
 def write_tree(tree, bitwriter):
@@ -82,20 +104,19 @@ def write_tree(tree, bitwriter):
         # Indicate branch
         bitwriter.writebit(1)
 
-        print("1 ", end="")
-        # print("Branchleft: 1")
-        write_tree(tree.left, bitwriter)
+        write_tree(tree.left, bitwriter)  # Recurse over left and right branch
         write_tree(tree.right, bitwriter)
     elif type(tree) is huffman.TreeLeaf:
         # Indicate leaf
         bitwriter.writebit(0)
         bitwriter.writebit(1)
 
-        binValue = "{0:b}".format(tree.value)
+        binValue = "{0:b}".format(tree.value)  # Get binary value
+
         # Pad front with zeros to get 8 bit binary value
         for _ in range(8-len(binValue)):
             bitwriter.writebit(0)
-            print("0", end="")
+
         # Print the value in binary
         for bit in binValue:
             if bit == "1":
@@ -103,15 +124,11 @@ def write_tree(tree, bitwriter):
             else:
                 bitwriter.writebit(0)
 
-        #print("Leaf: ", end="")
-        print(binValue, end=" ")
-
     elif type(tree) is huffman.TreeLeafEndMessage:
         # Indicate end message
-        print("END MESSAGE: 00")
-        # print("00 ", end="")
         bitwriter.writebit(0)
         bitwriter.writebit(0)
+
 
 def compress(tree, uncompressed, compressed):
     '''First write the given tree to the stream 'compressed' using the
@@ -129,49 +146,29 @@ def compress(tree, uncompressed, compressed):
     bitstream = bitio.BitWriter(compressed)
     write_tree(tree, bitstream)
 
-    enc_table = huffman.make_encoding_table(tree)
-    end_char = enc_table[None]
+    enc_table = huffman.make_encoding_table(tree)  # Create encoding table
+    end_char = enc_table[None]  # Get end char
 
-    input_stream = uncompressed.read(1)
+    input_stream = uncompressed.read(1)  # Read inn one byte
 
     while input_stream:
 
+        input_char = ord(input_stream)  # Convert to binary
+        compressed_char = enc_table[input_char]  # Get compressed byte
 
-        # print("Input Stream", input_stream, input_stream is not "")
-        input_char = ord(input_stream)
-        compressed_char = enc_table[input_char]
-
-        # bits_printed = 0
-        #print("input_char: ", input_char)
-        #print("compressed_char: ", compressed_char)
-        for bit in compressed_char:
+        for bit in compressed_char:  # Print the compressed byte
             if bit:
-                # compressed.write(bytes([1]))
                 bitstream.writebit(1)
-                # print("1", end="")
             else:
-                # compressed.write(bytes([0]))
                 bitstream.writebit(0)
-                #print("0", end="")
-            # bits_printed += 1
 
-        # print(" ", end="")
-
-        input_stream = uncompressed.read(1)
+        input_stream = uncompressed.read(1)  # Read the next byte
 
     # Print end bit
-
     for bit in end_char:
         if bit:
             bitstream.writebit(1)
         else:
             bitstream.writebit(0)
-            
+
     bitstream.flush()
-
-    # if bits_printed != 7:  # Dump remaining bytes
-    #     for _ in range(7-bits_printed):
-    #         compressed.write(bytes([0]))
-    #         # print("0", end="")
-
-    # print(input_stream+input_stream)
